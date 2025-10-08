@@ -76,7 +76,7 @@ class _PlayingPageState extends State<PlayingPage> {
       _cpuMove = null;
       _playerScore = 0;
       _cpuScore = 0;
-      _result = "Tap a move to start!!!";
+      _result = "Tap a move to start!";
     });
   }
 
