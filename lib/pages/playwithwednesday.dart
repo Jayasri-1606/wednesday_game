@@ -242,7 +242,7 @@ SizedBox(height: 10),
     children: [
       _avatar(profile.avatarFile, profile.avatarAsset, profile.name),
       const Text("VS", style: TextStyle(color: Colors.white, fontSize: 24)),
-      _avatar(null, "assets/images/wed.png", "Wednesday"),
+      _avatar(null, "assets/images/Addams.png", "Wednesday"),
     ],
   );
 
