@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:rps/pages/playing_page.dart';
-import 'package:rps/pages/profile.dart';
+import 'package:provider/provider.dart';
+import 'package:rps/profilemodel.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  String? playerName;
-String? profileUrl;
-
-  @override
   Widget build(BuildContext context) {
+    final profile = Provider.of<ProfileModel>(context);
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -22,126 +16,122 @@ String? profileUrl;
         decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage("assets/images/home.png"),
-            fit: BoxFit.fill,
+            fit: BoxFit.cover,
           ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Rock, Paper, Scissors icons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: const [
-                _ChoiceIcon(icon: Icons.front_hand, label: "Rock"),
-                _ChoiceIcon(icon: Icons.pan_tool, label: "Paper"),
-                _ChoiceIcon(icon: Icons.content_cut, label: "Scissors"),
-              ],
-            ),
-            const SizedBox(height: 60),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final bool isWide = constraints.maxWidth > 700;
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Header
+                    Text(
+                      "ROCK • PAPER • SCISSORS",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: isWide ? 38 : 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
 
-            // Profile & Start Game buttons
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xff772335),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () async {
-               final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
-                );
-                if (result != null) {
-      setState(() {
-        playerName = result["name"];
-        profileUrl = result["avatar"];
-      });
-    }
-              },
-              child: const Text(
-                "PROFILE",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+                    // Profile Avatar Section
+                    GestureDetector(
+                      onTap: () =>
+                          Navigator.pushNamed(context, '/profile'),
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: isWide ? 60 : 48,
+                            backgroundColor: Colors.black45,
+                            backgroundImage: profile.avatarFile != null
+                                ? FileImage(profile.avatarFile!)
+                                : (profile.avatarAsset != null
+                                    ? AssetImage(profile.avatarAsset!)
+                                    : null),
+                            child: (profile.avatarFile == null &&
+                                    profile.avatarAsset == null)
+                                ? const Icon(Icons.person,
+                                    color: Colors.white, size: 50)
+                                : null,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            profile.name.isNotEmpty
+                                ? profile.name
+                                : "Tap to create your profile",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isWide ? 18 : 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
-            const SizedBox(height: 16),
+                    const SizedBox(height: 60),
 
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xff772335),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () {
-    if (playerName != null && profileUrl != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PlayingPage(
-            playerName: playerName!,
-            profileUrl: profileUrl!,
-          ),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please create a profile first!")),
-      );
-    }
-  },
-              child: const Text(
-                "START GAME",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+                    // Icons Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: const [
+                        _ChoiceIcon(icon: Icons.front_hand, label: "Rock"),
+                        _ChoiceIcon(icon: Icons.pan_tool, label: "Paper"),
+                        _ChoiceIcon(icon: Icons.content_cut, label: "Scissors"),
+                      ],
+                    ),
+                    const SizedBox(height: 80),
 
-            const SizedBox(height: 16),
+                    // Buttons
+                    _MenuButton(
+                      label: "PROFILE",
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/profile'),
+                    ),
+                    const SizedBox(height: 16),
 
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xff772335),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                    _MenuButton(
+                      label: "START GAME",
+                      onPressed: () {
+                        if (profile.name.isNotEmpty) {
+                          Navigator.pushNamed(context, '/playing');
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Please create a profile first!")),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    _MenuButton(
+                      label: "PLAY WITH WEDNESDAY ADDAMS",
+                      onPressed: () {
+                        if (profile.name.isNotEmpty) {
+                          Navigator.pushNamed(context, '/play_with_wednesday');
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Please create a profile first!")),
+                          );
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
-              onPressed: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => const PlayingPage()),
-                // );
-              },
-              child: const Text(
-                "PLAY WITH WEDNESDAY ADDAMS",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -175,6 +165,36 @@ class _ChoiceIcon extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _MenuButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+
+  const _MenuButton({required this.label, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xff772335),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      onPressed: onPressed,
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 16,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
